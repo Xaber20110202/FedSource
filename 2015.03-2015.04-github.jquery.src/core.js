@@ -24,17 +24,21 @@ var
 
 	// Support: Android<4.1
 	// Make sure we trim BOM and NBSP
-	// @@ 替换一些不可见字符 包括BOM的一些特殊字符以及&nbsp;等等  此部分内容 参见
+	// @@@ 替换一些不可见字符 包括BOM的一些特殊字符以及&nbsp;等等  此部分内容 参见
 	// MDN开发手册  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/Trim
 	// 字符内容替换  https://www.imququ.com/post/bom-and-javascript-trim.html
 	// 感谢分享：JerryQu
 	rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,
 
 	// Matches dashed string for camelizing
+	// @@@ 参见 http://book.51cto.com/art/201402/430694.htm
+	// 即 jQuery.camelCase
 	rmsPrefix = /^-ms-/,
 	rdashAlpha = /-([\da-z])/gi,
 
 	// Used by jQuery.camelCase as callback to replace()
+	// @@@ 函数获得的参数  分别是 match, pattern1, pattern2... offset string
+	// 故 background-color --> backgroundColor
 	fcamelCase = function( all, letter ) {
 		return letter.toUpperCase();
 	};
@@ -264,6 +268,15 @@ jQuery.extend({
 	// Convert dashed to camelCase; used by the css and data modules
 	// Support: IE9-11+
 	// Microsoft forgot to hump their vendor prefix (#9572)
+	// @@@ 转换连字符式的字符串为驼峰式，用于CSS模块和数据缓存模块
+	
+	// rmsPrefix用于匹配字符串中前缀“-ms-”，匹配部分会被替换为“ms-”。
+	// 这么做是因为在IE中，连字符式的样式名前缀“-ms-”对应小写的“ms”，而不是驼峰式的“Ms”。
+	// 正如上面英文的翻译：微软忘了将他们的供应商前缀驼峰化。
+	// 例如，“-ms-transform”对应“msTransform”而不是“MsTransform”。
+	// 在IE以外的浏览器中，连字符式的样式名则可以正确地转换为驼峰式，例如，“-moz-transform”对应“MozTransform”。
+	
+	// 第二个替换 是传递函数来替换
 	camelCase: function( string ) {
 		return string.replace( rmsPrefix, "ms-" ).replace( rdashAlpha, fcamelCase );
 	},
