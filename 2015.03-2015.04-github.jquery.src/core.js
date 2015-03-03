@@ -24,20 +24,20 @@ var
 
 	// Support: Android<4.1
 	// Make sure we trim BOM and NBSP
-	// @@@ 替换一些不可见字符 包括BOM的一些特殊字符以及&nbsp;等等  此部分内容 参见
+	// @@@ 1.1 替换一些不可见字符 包括BOM的一些特殊字符以及&nbsp;等等  此部分内容 参见
 	// MDN开发手册  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/Trim
 	// 字符内容替换  https://www.imququ.com/post/bom-and-javascript-trim.html
 	// 感谢分享：JerryQu
 	rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,
 
 	// Matches dashed string for camelizing
-	// @@@ 参见 http://book.51cto.com/art/201402/430694.htm
+	// @@@ 2.1 参见 http://book.51cto.com/art/201402/430694.htm
 	// 即 jQuery.camelCase
 	rmsPrefix = /^-ms-/,
 	rdashAlpha = /-([\da-z])/gi,
 
 	// Used by jQuery.camelCase as callback to replace()
-	// @@@ 函数获得的参数  分别是 match, pattern1, pattern2... offset string
+	// @@@ 2.3 函数获得的参数  分别是 match, pattern1, pattern2... offset string
 	// 故 background-color --> backgroundColor
 	fcamelCase = function( all, letter ) {
 		return letter.toUpperCase();
@@ -122,28 +122,40 @@ jQuery.fn = jQuery.prototype = {
 	splice: arr.splice
 };
 
+// @@@ 3.1
 jQuery.extend = jQuery.fn.extend = function() {
 	var options, name, src, copy, copyIsArray, clone,
+		// @@@ 目标对象 如果没有参数传入 则设置为空对象
 		target = arguments[0] || {},
 		i = 1,
 		length = arguments.length,
+		// 默认浅拷贝
 		deep = false;
 
 	// Handle a deep copy situation
+	// 如果第一个参数是一个布尔值
+	// 是否深度拷贝
 	if ( typeof target === "boolean" ) {
 		deep = target;
 
 		// Skip the boolean and the target
+		// 第一个参数是布尔值  那么将第二个参数作为目标对象
 		target = arguments[ i ] || {};
 		i++;
 	}
 
 	// Handle case when target is a string or something (possible in deep copy)
+	// 如果传入的作为目标的不是对象  并且不是数组  将目标设置为空对象
 	if ( typeof target !== "object" && !jQuery.isFunction(target) ) {
 		target = {};
 	}
 
 	// Extend jQuery itself if only one argument is passed
+	// $.extend(other)  $.extend(true, other) 
+	// $.fn.extend(other) $.fn.extend(true, other)
+	// 那么就将目标对象设置为自身  即将other上的属性拷贝到$上
+	// 通过 当第一个参数是布尔值时 i++ 然后此部分进行 i--
+	// 将i设置为 所有source 对象的最开始的 参数位置index
 	if ( i === length ) {
 		target = this;
 		i--;
@@ -151,33 +163,52 @@ jQuery.extend = jQuery.fn.extend = function() {
 
 	for ( ; i < length; i++ ) {
 		// Only deal with non-null/undefined values
+		// 仅处理不是null和undefined的情况
 		if ( (options = arguments[ i ]) != null ) {
 			// Extend the base object
 			for ( name in options ) {
+				// 原始属性
 				src = target[ name ];
+				// 供拷贝的属性
 				copy = options[ name ];
 
 				// Prevent never-ending loop
+				// @problem: 原则上应该不会有死循环
+				// 只是会有太多无用的拷贝操作
 				if ( target === copy ) {
 					continue;
 				}
 
 				// Recurse if we're merging plain objects or arrays
+				// 深度复制
 				if ( deep && copy && ( jQuery.isPlainObject(copy) ||
+					// 注： isPlainObject isArray 在extend方法定义时仍未存在
+					// 但没有调用 所以不会抱错
+					// 之后 jQuery.extend() 混入静态属性时 获得了这两个方法
+					// 从而在后续的使用中可以调用执行
 					(copyIsArray = jQuery.isArray(copy)) ) ) {
 
+					// 供拷贝的该属性是一个数组
 					if ( copyIsArray ) {
+						// 重置开关
 						copyIsArray = false;
+						// 原始属性src也是一个数组 则使用src
+						// 否则 使用一个新数组
 						clone = src && jQuery.isArray(src) ? src : [];
 
+					// 供拷贝的该属性是一个对象
 					} else {
+						// 原始属性src也是一个对象 则使用src
+						// 否则 使用一个新对象
 						clone = src && jQuery.isPlainObject(src) ? src : {};
 					}
 
 					// Never move original objects, clone them
+					// 递归拷贝
 					target[ name ] = jQuery.extend( deep, clone, copy );
 
 				// Don't bring in undefined values
+				// undefined的属性滚粗 嗯哼
 				} else if ( copy !== undefined ) {
 					target[ name ] = copy;
 				}
@@ -186,11 +217,15 @@ jQuery.extend = jQuery.fn.extend = function() {
 	}
 
 	// Return the modified object
+	// 返回这个新对象
 	return target;
 };
 
+// @@@ 3.2 在extend之后 jQuery 已获得了以下这些属性和方法 因而就可以正常调用执行
 jQuery.extend({
 	// Unique for each copy of jQuery on the page
+	// 唯一的序列值 通过 JQuery + 　( 版本号 + Math.random() )替换掉小数点
+	// 例如 jQuery1110021066264971159399
 	expando: "jQuery" + ( version + Math.random() ).replace( /\D/g, "" ),
 
 	// Assume jQuery is ready without the ready module
@@ -200,23 +235,34 @@ jQuery.extend({
 		throw new Error( msg );
 	},
 
+	// 官方解释：http://api.jquery.com/jquery.noop/
+	// You can use this empty function when you wish to pass around a function that will do nothing.
+    // This is useful for plugin authors who offer optional callbacks; in the case that no callback is given, something like jQuery.noop could execute.
+    // 其实就是一个空函数 用于一些插件作者需要一些回调  然后其实你什么都不想做 就可以传递这个方法
 	noop: function() {},
 
+	// underscore.js 的function 检测可能更完美一点
+	// 不只是toString.call()
 	isFunction: function( obj ) {
 		return jQuery.type(obj) === "function";
 	},
 
+	// 这应该是ES 5的 可能我现在在看的是2.x版本
 	isArray: Array.isArray,
 
+	// window.window === window
 	isWindow: function( obj ) {
 		return obj != null && obj === obj.window;
 	},
 
+	// 见 http://api.jquery.com/jquery.isnumeric/
 	isNumeric: function( obj ) {
 		// parseFloat NaNs numeric-cast false positives (null|true|false|"")
 		// ...but misinterprets leading-number strings, particularly hex literals ("0x...")
 		// subtraction forces infinities to NaN
 		// adding 1 corrects loss of precision from parseFloat (#15100)
+		// 添加1 大概是IEEE754 精度原因
+		// obj 作为被减数 减去 某一数字大于等于0的前提是 obj在 数据类型转换之后 是一个数值类型
 		return !jQuery.isArray( obj ) && (obj - parseFloat( obj ) + 1) >= 0;
 	},
 
@@ -247,12 +293,19 @@ jQuery.extend({
 		return true;
 	},
 
+	// @@@ 3.6 注：在初始化 class2type时 其执行each时 each循环开始之前 调用的是 isArraylike
+	//里面又调用了type 此时 class2type还只是一个空对象
 	type: function( obj ) {
 		if ( obj == null ) {
+			// 'undefined' 'null'
 			return obj + "";
 		}
 		// Support: Android<4.0 (functionish RegExp)
+		// @@@ 3.7 因此 初始化时 typeof "Boolean Number String Function Array Date RegExp Object Error".split(" ") 为 'object'
+		// class2type[ toString.call(obj) ] 未定义
+		// 最后返回 object
 		return typeof obj === "object" || typeof obj === "function" ?
+			// @@@ 3.9 后续的type 方法检测判断 就进入了 toString.call的新纪元
 			class2type[ toString.call(obj) ] || "object" :
 			typeof obj;
 	},
@@ -268,7 +321,7 @@ jQuery.extend({
 	// Convert dashed to camelCase; used by the css and data modules
 	// Support: IE9-11+
 	// Microsoft forgot to hump their vendor prefix (#9572)
-	// @@@ 转换连字符式的字符串为驼峰式，用于CSS模块和数据缓存模块
+	// @@@ 2.2 转换连字符式的字符串为驼峰式，用于CSS模块和数据缓存模块
 	
 	// rmsPrefix用于匹配字符串中前缀“-ms-”，匹配部分会被替换为“ms-”。
 	// 这么做是因为在IE中，连字符式的样式名前缀“-ms-”对应小写的“ms”，而不是驼峰式的“Ms”。
@@ -285,6 +338,7 @@ jQuery.extend({
 		return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
 	},
 
+	// @@@ 3.4 然后在each的过程中 调用了isArraylike函数
 	each: function( obj, callback ) {
 		var i = 0,
 			length = obj.length,
@@ -308,6 +362,7 @@ jQuery.extend({
 	},
 
 	// Support: Android<4.1
+	// @@@ 1.2
 	trim: function( text ) {
 		return text == null ?
 			"" :
@@ -444,11 +499,13 @@ jQuery.extend({
 });
 
 // Populate the class2type map
+// @@@ 3.3 这里为初始化 class2type 调用了 $.each
 jQuery.each("Boolean Number String Function Array Date RegExp Object Error".split(" "),
 function(i, name) {
 	class2type[ "[object " + name + "]" ] = name.toLowerCase();
 });
 
+// @@@ 3.5 到了isArraylike函数 里面又调用了jQuery.type
 function isArraylike( obj ) {
 	var length = obj.length,
 		type = jQuery.type( obj );
@@ -460,7 +517,10 @@ function isArraylike( obj ) {
 	if ( obj.nodeType === 1 && length ) {
 		return true;
 	}
-
+	// @@@ 3.8 尽管初始化 class2type 时候 得到的 type 是 object
+	// 但是由于"Boolean Number String Function Array Date RegExp Object Error".split(" ") 本身就是一个数组
+	// 使得返回的 就是一个true
+	// 之后一层层返回回去 代码执行 将class2type 初始化完成
 	return type === "array" || length === 0 ||
 		typeof length === "number" && length > 0 && ( length - 1 ) in obj;
 }
