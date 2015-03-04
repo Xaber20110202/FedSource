@@ -266,15 +266,23 @@ jQuery.extend({
 		return !jQuery.isArray( obj ) && (obj - parseFloat( obj ) + 1) >= 0;
 	},
 
+	// 判断是否是用对象直接量 {} 或 new Object() 创建的对象
 	isPlainObject: function( obj ) {
 		// Not plain objects:
 		// - Any object or value whose internal [[Class]] property is not "[object Object]"
-		// - DOM nodes
-		// - window
+		// Object.prototype.toString.call( obj ) 返回的不是 [object Object]
+		// - DOM nodes  $.type(window) -> object
+		// - window  	$.type($('div')[0]) -> object
 		if ( jQuery.type( obj ) !== "object" || obj.nodeType || jQuery.isWindow( obj ) ) {
 			return false;
 		}
 
+		// 如果对象 obj 满足以下所有条件,则认为不是由构造函数 Object() 创建,而是由自定义构造函数创建,返回 false
+		// @@@ problem 此处使用 obj.constructor 并不知道深意 或许只是随手那么一写
+		// 任何东西都是对象 而 对象其实都拥有 constructor属性
+		// @@@《jQuery技术内幕》这本书中说，如果对象 obj 没有属性 constructor,则说明该对象必然是通过对象字面量 {} 创建的。
+		// 但其实 ({}).constructor --> function Object() { [native code] }
+		// 而，因所有的内置类型都是从Obejct继承而来，而isPrototypeOf是Object所特有的
 		if ( obj.constructor &&
 				!hasOwn.call( obj.constructor.prototype, "isPrototypeOf" ) ) {
 			return false;
@@ -285,6 +293,12 @@ jQuery.extend({
 		return true;
 	},
 
+	// for-in 循环会同时枚举非继承属性和从原型对象继承的属性
+	// jQuery.isEmptyObject( {} )
+	// jQuery.isEmptyObject( new Object() )
+	// jQuery.isEmptyObject( { foo: "bar" } )
+	// 注：JS内置类型原型上的属性和方法是不被枚举的[native Code] 
+	// 例如Object.prototype.toString Array.prototype.join RegExp.prototype.source
 	isEmptyObject: function( obj ) {
 		var name;
 		for ( name in obj ) {
@@ -311,6 +325,17 @@ jQuery.extend({
 	},
 
 	// Evaluates a script in a global context
+	// 这里相当于确认了这个版本是jQuery 2.x
+	// 通过创建一个script标签 执行相应代码后再移除
+	// 1.x 代码则是
+	/*
+	if ( data && rnotwhite.test( data ) ) {
+		// We use execScript on Internet Explorer
+		// We use an anonymous function so that context is window // rather than jQuery in Firefox
+		( window.execScript || function( data ) {
+		window[ "eval" ].call( window, data ); } )( data );
+	}
+	 */
 	globalEval: function( code ) {
 		var script = document.createElement( "script" );
 
@@ -334,6 +359,7 @@ jQuery.extend({
 		return string.replace( rmsPrefix, "ms-" ).replace( rdashAlpha, fcamelCase );
 	},
 
+	// 用于检查 DOM 元素的节点名称(即属性 nodeName) 与指定的值是否相等,检查时忽略大小写
 	nodeName: function( elem, name ) {
 		return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
 	},
@@ -506,6 +532,12 @@ function(i, name) {
 });
 
 // @@@ 3.5 到了isArraylike函数 里面又调用了jQuery.type
+// 关于类数组的一点释义 http://segmentfault.com/blog/f2e/1190000000415572
+// 有length 属性 值是number类型
+// 属性是 1 2 3 ...
+// Array.prototype.slice.call({aa:2, ength:3}) -> [undefined × 3]
+// Array.prototype.slice.call({1:2, length:3})  -> [undefined × 1, 2, undefined × 1]
+// 是不是有点意思？
 function isArraylike( obj ) {
 	var length = obj.length,
 		type = jQuery.type( obj );
@@ -514,6 +546,11 @@ function isArraylike( obj ) {
 		return false;
 	}
 
+	// @@@ problem 按照常理说 nodeType === 1的说明其是一个dom元素
+	// 那么又哪来的length属性？
+	// 而NodeList、HTMLCollection尽管有length 但是其nodeType是不存在的
+	// 真是见了鬼了，卡了一个小时
+	// 这个判断意义何在
 	if ( obj.nodeType === 1 && length ) {
 		return true;
 	}
