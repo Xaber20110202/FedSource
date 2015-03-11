@@ -52,6 +52,9 @@ jQuery.fn = jQuery.prototype = {
 	// The default length of a jQuery object is 0
 	length: 0,
 
+	// 因为是arraylike
+	// Array.prototype.slice.call({aa:2, ength:3}) -> [undefined × 3]
+	// Array.prototype.slice.call({1:2, length:3})  -> [undefined × 1, 2, undefined × 1]
 	toArray: function() {
 		return slice.call( this );
 	},
@@ -65,6 +68,9 @@ jQuery.fn = jQuery.prototype = {
 			( num < 0 ? this[ num + this.length ] : this[ num ] ) :
 
 			// Return all the elements in a clean array
+			// 如果没有传递num，返回一个数组，从jQuery对象转化而来
+			// Object.prototype.toString.call($('div')) --> "[object Object]"
+			// Object.prototype.toString.call($('div').get()) --> "[object Array]"
 			slice.call( this );
 	},
 
@@ -73,9 +79,11 @@ jQuery.fn = jQuery.prototype = {
 	pushStack: function( elems ) {
 
 		// Build a new jQuery matched element set
+		// 通过$.merge 将elems 中的数组项 依次放入到一个空的jQuery实例对象中
 		var ret = jQuery.merge( this.constructor(), elems );
 
 		// Add the old object onto the stack (as a reference)
+		// 并且将当前对象作为一个引用 挂在 prevObject 属性下
 		ret.prevObject = this;
 
 		// Return the newly-formed element set
@@ -84,15 +92,20 @@ jQuery.fn = jQuery.prototype = {
 
 	// Execute a callback for every element in the matched set.
 	each: function( callback ) {
+		// 因为是类数组
 		return jQuery.each( this, callback );
 	},
 
 	map: function( callback ) {
+		// $.map返回的是一个数组
+		// 通过pushStack返回一个jQuery对象
 		return this.pushStack( jQuery.map(this, function( elem, i ) {
 			return callback.call( elem, i, elem );
 		}));
 	},
 
+	// 同上 slice.apply( this, arguments ) 返回一个数组
+	// 再通过pushStack 返回一个 jQuery对象
 	slice: function() {
 		return this.pushStack( slice.apply( this, arguments ) );
 	},
@@ -108,6 +121,8 @@ jQuery.fn = jQuery.prototype = {
 	eq: function( i ) {
 		var len = this.length,
 			j = +i + ( i < 0 ? len : 0 );
+		// 为兼容 length为0 i >= 0的情况
+		// eq方法也不是直接取的引用 而是复制
 		return this.pushStack( j >= 0 && j < len ? [ this[j] ] : [] );
 	},
 
@@ -117,6 +132,30 @@ jQuery.fn = jQuery.prototype = {
 
 	// For internal use only.
 	// Behaves like an Array's method, not like a jQuery method.
+	// 有点厉害的，如果不知道ECMA的对应实现，不可能会这么写
+	/*
+	var a = {1:1};
+	a.push = Array.prototype.push;
+	a.push(10);
+	a --> Object {0: 10, 1: 1, push: function, length: 1}
+
+	var a = {0:1}
+	a.push = Array.prototype.push;
+	a.push(10);
+	a --> Object {0: 10, push: function, length: 1}
+
+	var a = {0:1,length:1}
+	a.push = Array.prototype.push;
+	a.push(10);
+	a --> Object {0: 1, 1: 10, length: 2, push: function}
+
+	是不是有点神奇的？
+	猜测：push的作用，就是将obj[obj.length]依次设置成arguments上的值
+	于是，数组原型上的这些方法，在类数组上也适用
+
+	同理：Array.prototype.sort  Array.prototype.splice
+	因这几个方法都是直接作用在数组［对象］本身上，而slice等则是做了一个拷贝
+	 */
 	push: push,
 	sort: arr.sort,
 	splice: arr.splice
@@ -599,9 +638,10 @@ function(i, name) {
 
 // @@@ 3.5 到了isArraylike函数 里面又调用了jQuery.type
 // 关于类数组的一点释义 http://segmentfault.com/blog/f2e/1190000000415572
+// 如上链接无法访问 因其在备案 可访问：http://segmentfault.net/blog/f2e/1190000000415572
 // 有length 属性 值是number类型
 // 属性是 1 2 3 ...
-// Array.prototype.slice.call({aa:2, ength:3}) -> [undefined × 3]
+// Array.prototype.slice.call({aa:2, length:3}) -> [undefined × 3]
 // Array.prototype.slice.call({1:2, length:3})  -> [undefined × 1, 2, undefined × 1]
 // 是不是有点意思？
 function isArraylike( obj ) {
