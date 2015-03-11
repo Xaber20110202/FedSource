@@ -369,7 +369,8 @@ jQuery.extend({
 		var i = 0,
 			length = obj.length,
 			isArray = isArraylike( obj );
-
+		// jQuery的each也支持中间跳出循环
+		// 只要循环的过程中，调用的返回值是false即默认跳出循环
 		if ( isArray ) {
 			for ( ; i < length; i++ ) {
 				if ( callback.call( obj[ i ], i, obj[ i ] ) === false ) {
@@ -384,6 +385,7 @@ jQuery.extend({
 			}
 		}
 
+		// 用于链式调用
 		return obj;
 	},
 
@@ -396,6 +398,10 @@ jQuery.extend({
 	},
 
 	// results is for internal usage only
+	// arr --> isArraylike
+	// 			  string 		--> $.merge(ret, [arr])
+	// 			  obj || array  --> $.merge(ret, arr)
+	// other --> ret.push(arr)
 	makeArray: function( arr, results ) {
 		var ret = results || [];
 
@@ -414,12 +420,17 @@ jQuery.extend({
 	},
 
 	inArray: function( elem, arr, i ) {
+		// 直接利用的ES5的Array.prototype.indexOf
 		return arr == null ? -1 : indexOf.call( arr, elem, i );
 	},
 
 	// Support: Android<4.1, PhantomJS<2
 	// push.apply(_, arraylike) throws on ancient WebKit
+	// 将第二个数组的数组项依次放入到第一个数组后面
 	merge: function( first, second ) {
+		// 至于这里使用+second.length的形式
+		// 是因为second可能是类数组而不是真的数组
+		// 见$.makeArray
 		var len = +second.length,
 			j = 0,
 			i = first.length;
@@ -428,22 +439,38 @@ jQuery.extend({
 			first[ i++ ] = second[ j ];
 		}
 
+		// @@@problem: 是否多此一举？
 		first.length = i;
 
 		return first;
 	},
 
+	/*
+	$.grep([1,2,3], function (value, index) {
+		if (value === 2) return true;
+	}, 1);
+	--> [1, 3]
+
+	$.grep([1,2,3], function (value, index) {
+		if (value === 2) return true;
+	});
+	--> [2]
+	 */
 	grep: function( elems, callback, invert ) {
 		var callbackInverse,
 			matches = [],
 			i = 0,
 			length = elems.length,
+			// 取反 转成布尔值
 			callbackExpect = !invert;
 
 		// Go through the array, only saving the items
 		// that pass the validator function
 		for ( ; i < length; i++ ) {
+			// 将函数调用结果取反 转成布尔值
 			callbackInverse = !callback( elems[ i ], i );
+			// 如果传入的第三个参数和函数调用结果 取反之后不一致
+			// 则将对应的元素放入matches数组
 			if ( callbackInverse !== callbackExpect ) {
 				matches.push( elems[ i ] );
 			}
@@ -453,6 +480,12 @@ jQuery.extend({
 	},
 
 	// arg is for internal usage only
+	/*
+	$.map([1,2,3], function (value, index, arg) {
+		return arg + ' ' + value;
+	}, 'it is')
+	--> ["it is 1", "it is 2", "it is 3"]
+	*/
 	map: function( elems, callback, arg ) {
 		var value,
 			i = 0,
@@ -482,6 +515,20 @@ jQuery.extend({
 		}
 
 		// Flatten any nested arrays
+		// 将嵌套的数组整平
+		/*
+		$.map( [0,1,2], function(n){
+  			return [ n, n + 1 ];
+		});
+		--> [0, 1, 1, 2, 2, 3]
+		如果直接return ret的话，输出将会是：[[0,1], [1,2], [2,3]]
+		 */
+		/* 注意：
+		[1,2,3].map(function (value, index, array) {return [index, value]})
+		--> [[0,1], [1,2], [2,3]]
+		并且 array参数位置接收的就是[1, 2, 3]数组
+		吐槽：真是觉得jQuery的代码写的比underscore的丑太多了
+		 */
 		return concat.apply( [], ret );
 	},
 
@@ -490,6 +537,16 @@ jQuery.extend({
 
 	// Bind a function to a context, optionally partially applying any
 	// arguments.
+	// 类似bind 接受两种形式
+	// jQuery.proxy( function, context [, additionalArguments ] ) function 函数调用 this指向context
+	// jQuery.proxy( context, name [, additionalArguments ] )  name是context的属性 context[name]方法调用的this指向context
+	/*
+	$('#myElement').click(function() {
+	    setTimeout($.proxy(function() {
+	        $(this).addClass('aNewClass');
+	    }, this), 1000);
+	});
+	 */
 	proxy: function( fn, context ) {
 		var tmp, args, proxy;
 
@@ -507,11 +564,19 @@ jQuery.extend({
 
 		// Simulated bind
 		args = slice.call( arguments, 2 );
+		// 最后返回的是这个新的函数 additionalArguments 作为proxy这个新函数的前面几个参数被传入到proxy中
+		/*
+		var add = function (a, b) {return a + b;};
+		var add5 = $.proxy(add, undefined, 5);
+		add5(3) --> 8
+		 */
 		proxy = function() {
 			return fn.apply( context || this, args.concat( slice.call( arguments ) ) );
 		};
 
 		// Set the guid of unique handler to the same of original handler, so it can be removed
+		// 做一个标记
+		// @@@ problem 当然 现在还不知道它的具体用处
 		proxy.guid = fn.guid = fn.guid || jQuery.guid++;
 
 		return proxy;
@@ -521,6 +586,7 @@ jQuery.extend({
 
 	// jQuery.support is not used in Core but other projects attach their
 	// properties to it so it needs to exist.
+	// 见/var/support.js 用于存放所有模块的支持检测情况
 	support: support
 });
 
@@ -559,6 +625,10 @@ function isArraylike( obj ) {
 	// 使得返回的 就是一个true
 	// 之后一层层返回回去 代码执行 将class2type 初始化完成
 	return type === "array" || length === 0 ||
+		// || 与 && 是同级操作符 上面这两个判断一旦为 true 便立即返回
+		// 而到达typeof length === "number" 时候 需要 后面全部返回true才最终返回true
+		// ( length -1 ) in obj只是多做一层检测
+		// isArraylike({5:6,length:6}) -> true
 		typeof length === "number" && length > 0 && ( length - 1 ) in obj;
 }
 
