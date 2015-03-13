@@ -1071,7 +1071,8 @@
   // but if you'd like to disable the execution on the leading edge, pass
   // `{leading: false}`. To disable execution on the trailing edge, ditto.
   // @ 8.26 再走一遍逻辑 这个节流函数确实很棒  特别是在短时间内连续调用函数的情况下 比如 scroll事件
-  // 再次注明:    options 的leading 和 trailing 不能同时为false
+  // 再次注明:    
+  // 如果 在wait时间内函数只执行1次，options 的leading 和 trailing 不能同时为false
   // situation1:  leading !== false && trailing !== false
   //              retFunc第一次调用立即执行参数func  第二次如果在wait时间间隔内内调用则设置一个定时器  时间间隔中又调用的话返回result  
   //              而在定时器中func 执行完之后的再次调用 又是立即执行func   亦即是 如果在非常短的间隔内连续调用 例如 scroll事件  其会在定时器时间到时连续调用两次func
