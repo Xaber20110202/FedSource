@@ -1666,6 +1666,9 @@
   // @13.05 
   // @mark 这里也没有找到一个布尔值不是true 和false 的情况
   // 那么这里第三个判断是作何用处
+  // @solved _.isBoolean(new Boolean(false)) === false --> false
+  // @感谢 tongta.chen
+  // @updated 2015.08.24
   _.isBoolean = function(obj) {
     return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
   };
