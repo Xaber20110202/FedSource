@@ -7,3 +7,4 @@
 * ~~doing jquery.js （2015.03.02 github 拷贝的jquery src下的代码，发现是2.x版本。当前jquery.com上放出的2.x版本是2.1.3。嗯，这个版本其实是2.1.3.5。）~~
 * 2017.01.12 thunkify.js
 * 2017.03.07 co.js
+* 2017.03.10 native-promise-only.js
