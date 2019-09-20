@@ -26,4 +26,4 @@
 ## Demo
 如果想跟随调用方式，更清晰了解 Flux 的运作方式，可以查看此部分代码
 
-[controlpannel - 2.flux](https://github.com/Xaber20110202/flux-redux-demo/tree/master/src/2.flux)
+![controlpannel - 2.flux](https://github.com/Xaber20110202/flux-redux-demo/tree/master/src/2.flux)
