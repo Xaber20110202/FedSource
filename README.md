@@ -11,3 +11,4 @@
 * 2017.03.07 co.js
 * 2017.03.10 native-promise-only.js
 * [2019.09.19 flux](https://github.com/Xaber20110202/FedSource/tree/master/2019.09.19%20flux)
+* [2019.09.21 redux](https://github.com/Xaber20110202/FedSource/tree/master/2019.09.20%20redux)
