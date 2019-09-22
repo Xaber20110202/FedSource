@@ -213,7 +213,8 @@ export default function createStore(reducer, preloadedState, enhancer) {
       )
     }
 
-    // TODO: 不能在 dispatch 内部进行dispatch，否则就递归了
+    // 不能在 dispatch 内部进行dispatch，否则就递归了
+    // 类似 flux 的边界处理，不能在 reducer 函数内部调用 dispatch
     if (isDispatching) {
       throw new Error('Reducers may not dispatch actions.')
     }

@@ -138,7 +138,7 @@ function create<DefaultProps, Props, State>(
       super(props, context);
       this._fluxContainerSubscriptions = new FluxContainerSubscriptions();
       // 把 stores 做成一个 fluxStoreGroup
-      // TODO: 硬性要求：getStores 返回的所有的 stores，必须有相同的 dispatcher （这么看起来 dispatcher 只能有一个？？）
+      // 硬性要求：getStores 返回的所有的 stores，必须有相同的 dispatcher （这么看起来 dispatcher 只能有一个？？）
       this._fluxContainerSubscriptions.setStores(getStores(props, context));
       this._fluxContainerSubscriptions.addListener(() => {
         // ===============================================================================================
