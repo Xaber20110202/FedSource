@@ -85,10 +85,10 @@ export function createSelectorCreator(memoize, ...memoizeOptions) {
     //   taxSelector,
     //   (subtotal, tax) => ({ total: subtotal + tax })
     // )
-    // 以 totalSelector 为例子，如果 state 没变，dependencies 函数数组 不会被重新执行，而是直接返回
+    // 以 totalSelector 为例子，因为 selector 接受的参数，第一个基本上就是 state。那么如果 state 没变，dependencies 函数数组 不会被重新执行，而是直接返回
     // 但是 如果 state 变了，其实 dependencies 都会执行一遍
     // 而因为 subtotal、tax 没变，所以 memoizedResultFunc 会拿原来的 lastResult 直接返回
-    // 这么看起来，createSelector 基于 defaultMemoize，它其实如果一旦 state 改变，dependencies 都会重新执行一遍  （只会作用在最后一个 resultFunc 的缓存）
+    // 这么看起来，createSelector 基于 defaultMemoize，它其实如果一旦 state 改变（每次 redux reducer 变化），dependencies 都会重新执行一遍  （只会作用在最后一个 resultFunc 的缓存）
     // 当然，如果 dependencies 都只是 获取属性值返回，而不涉及计算的话，就还好了
     const selector = memoize(function () {
       const params = []
