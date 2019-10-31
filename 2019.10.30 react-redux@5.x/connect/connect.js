@@ -40,6 +40,7 @@ function strictEqual(a, b) { return a === b }
 // createConnect with default args builds the 'official' connect behavior. Calling it with
 // different options opens up some testing and extensibility scenarios
 export function createConnect({
+  // 只以 connectAdvanced 为例
   connectHOC = connectAdvanced,
   // 只以 defaultMapStateToPropsFactories 为例
   mapStateToPropsFactories = defaultMapStateToPropsFactories,
@@ -47,6 +48,7 @@ export function createConnect({
   mapDispatchToPropsFactories = defaultMapDispatchToPropsFactories,
   // 只以 defaultMergePropsFactories 为例
   mergePropsFactories = defaultMergePropsFactories,
+  // 只以 defaultSelectorFactory 为例
   selectorFactory = defaultSelectorFactory
 } = {}) {
   return function connect(
@@ -55,9 +57,13 @@ export function createConnect({
     mergeProps,
     {
       pure = true,
+      // 全等
       areStatesEqual = strictEqual,
+      // 一层相等匹配
       areOwnPropsEqual = shallowEqual,
+      // 一层相等匹配
       areStatePropsEqual = shallowEqual,
+      // 一层相等匹配
       areMergedPropsEqual = shallowEqual,
       ...extraOptions
     } = {}
@@ -68,8 +74,11 @@ export function createConnect({
     // 给 mapDispatchToProps 包一层 根据 mapDispatchToPropsFactories 处理显示
     // mapDispatchToProps 可以是 Object, falsy value, 或者 func
     const initMapDispatchToProps = match(mapDispatchToProps, mapDispatchToPropsFactories, 'mapDispatchToProps')
+    // 给 mergePropsFactories 包一层 根据 mergePropsFactories 处理显示
+    // mapDispatchToProps 可以是 falsy value, 或者 func
     const initMergeProps = match(mergeProps, mergePropsFactories, 'mergeProps')
 
+    // 这里直接当作 connectAdvanced、defaultSelectorFactory
     return connectHOC(selectorFactory, {
       // used in error messages
       methodName: 'connect',
@@ -78,13 +87,21 @@ export function createConnect({
       getDisplayName: name => `Connect(${name})`,
 
       // if mapStateToProps is falsy, the Connect component doesn't subscribe to store state changes
+      // 如果 mapStateToProps 是 falsy value, Connect 组件不会去订阅 store 的变化
       shouldHandleStateChanges: Boolean(mapStateToProps),
 
       // passed through to selectorFactory
+      // 需要注意的，这三个玩意儿，全部都是 ”二阶函数“，执行后返回函数A，函数A执行返回函数B = =
       initMapStateToProps,
       initMapDispatchToProps,
       initMergeProps,
+
+      // 默认值就当作 true
       pure,
+      // areStatesEqual = strictEqual,
+      // areOwnPropsEqual = shallowEqual,
+      // areStatePropsEqual = shallowEqual,
+      // areMergedPropsEqual = shallowEqual,
       areStatesEqual,
       areOwnPropsEqual,
       areStatePropsEqual,
