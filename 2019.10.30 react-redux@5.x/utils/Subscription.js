@@ -68,8 +68,11 @@ export default class Subscription {
 
   trySubscribe() {
     if (!this.unsubscribe) {
+      // 一开始是一个null
       this.unsubscribe = this.parentSub
         ? this.parentSub.addNestedSub(this.onStateChange)
+        // 这样就在 store 上绑定了一个 subscribe
+        // 每次 dispatch 都会进行 onStateChange 调用
         : this.store.subscribe(this.onStateChange)
  
       this.listeners = createListenerCollection()

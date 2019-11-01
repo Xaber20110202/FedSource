@@ -65,6 +65,7 @@ export function createConnect({
       areStatePropsEqual = shallowEqual,
       // 一层相等匹配
       areMergedPropsEqual = shallowEqual,
+      // 从 connectAdvanaced.js 可知，此处还可以传递 withRef 等等参数
       ...extraOptions
     } = {}
   ) {

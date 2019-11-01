@@ -9,15 +9,12 @@
 
 PS：
 
-1. 这里因为图方便，直接拿的 react-redux@5.x 的源码，使用的是老的 即将废弃的 Context API [https://react.docschina.org/docs/legacy-context.html](https://react.docschina.org/docs/legacy-context.html)
+1. 这里因为 react-redux@7.x 用到了hook，这里先拿 react-redux@5.x 的源码，使用的是老的 即将废弃的 Context API [https://react.docschina.org/docs/legacy-context.html](https://react.docschina.org/docs/legacy-context.html)
 2. 当然，新的 Context API 性能会好一些，但是就 react-redux 实现思路上，差距不大
 
 ## 解疑与问题
-TODO:
-1. 简单描述就是，context 只是用来共享数据，获取用的，而不是拿来做 context 数据变更响应用 「不是 context 变更，自动触发更新哦」
-2. context 是 store，但是我们平时 dispatch 也只会更改 store 下面某一个数据值，不会改变 store 本身。那 context 引用值都没变，react-redux 又是怎么触发更新的呢？ 那么怎么触发的更新？
-
-答案 —— subscribe
+1. 可能的理解不一致：简单描述就是，`context` 只是用来在跨层级组件中共享数据、获取数据用的，而不是拿来做 `context` 数据变更响应使用的 「不是 `context` 变更，自动触发更新哦」
+2. 可能的困惑之处：`context` 是 `store`，但是我们平时 `dispatch` 也只会更改 `store` 下面某一个数据值，不会改变 `store` 本身。那 `context` **引用值都没变**，`react-redux` 又是怎么监听到变化从而触发更新的？ —— 通过 其内部实现的 `subscribe` 机制 （`redux store.subscribe`）
 
 ## 分析
 ### Provider

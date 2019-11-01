@@ -103,6 +103,9 @@ export default function finalPropsSelectorFactory(dispatch, {
   initMergeProps,
   ...options
 }) {
+  // 组合式函数 params 的分解与再组装，即一开始传递的这几个参数，又聚集在这里进行调用执行
+  // 注意，前面提到 initMapStateToProps、initMapDispatchToProps、initMergeProps 都是“二阶”函数
+  // 即 mapStateToProps、mapDispatchToProps、mergeProps 这三个函数，调用后，返回仍然会是函数
   const mapStateToProps = initMapStateToProps(dispatch, options)
   const mapDispatchToProps = initMapDispatchToProps(dispatch, options)
   const mergeProps = initMergeProps(dispatch, options)
@@ -115,6 +118,7 @@ export default function finalPropsSelectorFactory(dispatch, {
     ? pureFinalPropsSelectorFactory
     : impureFinalPropsSelectorFactory
 
+  // selectorFactory 调用，生成的 Selector 又是一个函数
   return selectorFactory(
     mapStateToProps,
     mapDispatchToProps,

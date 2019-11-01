@@ -75,6 +75,13 @@ export default function connectAdvanced(
     withRef = false,
 
     // additional options are passed through to the selectorFactory
+    // 从 connect.js 可知，connectOptions 包含以下这类内容
+    // pure,
+    // areStatesEqual,
+    // areOwnPropsEqual,
+    // areStatePropsEqual,
+    // areMergedPropsEqual,
+    // ...extraOptions
     ...connectOptions
   } = {}
 ) {
@@ -90,6 +97,7 @@ export default function connectAdvanced(
   }
 
   return function wrapWithConnect(WrappedComponent) {
+    // 必须是 React 组件
     invariant(
       isValidElementType(WrappedComponent),
       `You must pass a component to the function returned by ` +
@@ -103,6 +111,7 @@ export default function connectAdvanced(
     const displayName = getDisplayName(wrappedComponentName)
 
     const selectorFactoryOptions = {
+      // 反了下，避免 connectOptions 内其他一些属性对设定内容的覆盖
       ...connectOptions,
       getDisplayName,
       methodName,
@@ -125,7 +134,9 @@ export default function connectAdvanced(
         this.version = version
         this.state = {}
         this.renderCount = 0
+        // 缓存
         this.store = props[storeKey] || context[storeKey]
+        // store 是否通过 props 传递
         this.propsMode = Boolean(props[storeKey])
         this.setWrappedInstance = this.setWrappedInstance.bind(this)
 
@@ -194,11 +205,14 @@ export default function connectAdvanced(
 
       initSelector() {
         const sourceSelector = selectorFactory(this.store.dispatch, selectorFactoryOptions)
+        // 给 sourceSelector 再包装一层
         this.selector = makeSelectorStateful(sourceSelector, this.store)
+        // 把 props、nextProps 相关数据更新，维护在 selector 内部
         this.selector.run(this.props)
       }
 
       initSubscription() {
+        // 根据 connect.js 内容，mapStateToProps 如果不传递，就不会进行 subscrption 建立
         if (!shouldHandleStateChanges) return
 
         // parentSub's source should match where store came from: props vs. context. A component
@@ -215,6 +229,7 @@ export default function connectAdvanced(
         this.notifyNestedSubs = this.subscription.notifyNestedSubs.bind(this.subscription)
       }
 
+      // 每次 dispatch 都会调用
       onStateChange() {
         this.selector.run(this.props)
 
@@ -222,6 +237,7 @@ export default function connectAdvanced(
           this.notifyNestedSubs()
         } else {
           this.componentDidUpdate = this.notifyNestedSubsOnComponentDidUpdate
+          // TODO: setState 空对象 触发更新？
           this.setState(dummyState)
         }
       }
@@ -260,6 +276,7 @@ export default function connectAdvanced(
         if (selector.error) {
           throw selector.error
         } else {
+          // 渲染新的 React 组件元素，新增了 merged props （利用 selector.props）
           return createElement(WrappedComponent, this.addExtraProps(selector.props))
         }
       }
@@ -308,6 +325,9 @@ export default function connectAdvanced(
       }
     }
 
+    // hoistNonReactStatics(targetComponent, sourceComponent); 把 sourceComponent 上的静态方法，全部 “copy” 到 targetComponent
+    // https://reactjs.org/docs/higher-order-components.html#static-methods-must-be-copied-over
+    // https://github.com/mridgway/hoist-non-react-statics/blob/master/src/index.js
     return hoistStatics(Connect, WrappedComponent)
   }
 }
